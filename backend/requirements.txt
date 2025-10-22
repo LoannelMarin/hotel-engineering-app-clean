@@ -1,0 +1,18 @@
+# --- Core Framework ---
+Flask==3.0.3
+Flask-Cors==4.0.0
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.7
+Flask-JWT-Extended==4.6.0
+Werkzeug==3.0.3
+python-dotenv==1.0.1
+
+# --- Database Drivers ---
+psycopg2-binary==2.9.9   # Driver PostgreSQL
+
+# --- Deployment ---
+gunicorn==23.0.0         # Servidor WSGI para producción
+
+# --- Utilities (optional but useful) ---
+SQLAlchemy==2.0.31
+alembic==1.13.2

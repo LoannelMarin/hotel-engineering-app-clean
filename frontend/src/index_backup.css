@@ -1,0 +1,74 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =======================
+   TOKENS (Light / Dark)
+   ======================= */
+
+/* Light */
+:root {
+  --bg: #f6f7fb;
+  --surface-1: #ffffff;
+  --surface-2: #f8fafc;
+  --surface-3: #eef2f7;
+
+  --border-1: #e5e7eb;
+
+  --text-1: #0f172a;
+  --text-2: #334155;
+  --muted: #64748b;
+
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #0f172a;
+
+  --btn-bg: var(--surface-1);
+
+  --accent-emerald: #22c55e;
+  --accent-sky: #38bdf8;
+  --accent-amber: #f59e0b;
+  --accent-red: #ef4444;
+
+  /* Gantt defaults (Light) */
+  --gantt-day-w: 24px;
+  --gantt-row-h: 56px;
+
+  --grid-day: rgba(100, 116, 139, 0.18);
+  --grid-week: rgba(100, 116, 139, 0.3);
+  --grid-month: rgba(100, 116, 139, 0.55);
+  --grid-row: rgba(148, 163, 184, 0.22);
+}
+
+/* Dark */
+html.dark,
+.dark {
+  --bg: #0a0a0b;
+  --surface-1: #1a1c1f;
+  --surface-2: #202226;
+  --surface-3: #2a2d31;
+
+  --border-1: #2f3238;
+
+  --text-1: #f3f4f6;
+  --text-2: #c7cad1;
+  --muted: #9aa0a6;
+
+  /* Sidebar dark */
+  --sidebar-bg: #0c0c0d;
+  --sidebar-text: #f3f4f6;
+
+  --btn-bg: #1a1c1f;
+
+  --accent-emerald: #22c55e;
+  --accent-sky: #7dd3fc;
+  --accent-amber: #fbbf24;
+  --accent-red: #f87171;
+
+  --gantt-day-w: 24px;
+  --gantt-row-h: 56px;
+
+  --grid-day: rgba(160, 160, 170, 0.14);
+  --grid-week: rgba(160, 160, 170, 0.25);
+  --grid-month: rgba(160, 160, 170, 0.45);
+  --grid-row: rgba(160, 160, 170, 0.16);
+}

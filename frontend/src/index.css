@@ -1,0 +1,186 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =======================
+   TOKENS (Light / Dark)
+   ======================= */
+
+/* Light */
+:root {
+  --bg:           #f6f7fb;
+  --surface-1:    #ffffff;
+  --surface-2:    #f9fafb;
+  --surface-3:    #f3f4f6;
+
+  --border-day:   rgba(0, 0, 0, 0.06);
+  --border-soft:  rgba(0, 0, 0, 0.04);
+  --border-table: rgba(0, 0, 0, 0.08);
+
+  --text-1:       #0f172a;
+  --text-2:       #334155;
+  --muted:        #64748b;
+
+  --sidebar-bg:   #ffffff;
+  --sidebar-text: #0f172a;
+
+  --accent-green: #0B5150;
+}
+
+/* Dark */
+.dark {
+  --bg:           #18181b;
+  --surface-1:    #1f1f22;
+  --surface-2:    #27272a;
+  --surface-3:    #2f2f31;
+
+  /* 👇 BORDES GRISES (no blancos) */
+  --border-day:   rgba(100, 100, 100, 0.25);
+  --border-soft:  rgba(100, 100, 100, 0.15);
+  --border-table: rgba(120, 120, 120, 0.22);
+
+  --text-1:       #f4f4f5;
+  --text-2:       #e4e4e7;
+  --muted:        #a1a1aa;
+
+  --sidebar-bg:   #18181b;
+  --sidebar-text: #f4f4f5;
+}
+
+/* =======================
+   BASE GLOBAL
+   ======================= */
+html, body, #root {
+  background-color: var(--bg);
+  color: var(--text-1);
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  border-style: solid;
+  border-width: 0;
+  box-sizing: border-box;
+}
+
+/* =======================
+   TABLA LOANNEL
+   ======================= */
+.dt-loannel-dark {
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--border-day);
+  background-color: var(--surface-1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.dark .dt-loannel-dark {
+  border: 1px solid var(--border-day);
+  box-shadow: 0 1px 2px rgba(255, 255, 255, 0.02);
+}
+
+.dt-loannel-dark table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.dt-loannel-dark thead th {
+  background-color: #202022;
+  color: #f4f4f5;
+  font-weight: 500;
+  padding: 0.6rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-table);
+}
+
+.dt-loannel-dark tbody td {
+  padding: 0.6rem 1rem;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--border-table);
+  transition: background 0.2s ease;
+}
+
+.dt-loannel-dark tbody tr:hover td {
+  background-color: rgba(244, 244, 245, 0.45);
+}
+.dark .dt-loannel-dark tbody tr:hover td {
+  background-color: rgba(39, 39, 42, 0.6);
+}
+
+.dt-loannel-dark tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* =======================
+   SIDEBAR
+   ======================= */
+.sidebar {
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  border-right: 1px solid var(--border-soft);
+  box-shadow: 1px 0 2px rgba(0, 0, 0, 0.03);
+}
+
+.dark .sidebar {
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  border-right: 1px solid var(--border-day);
+  box-shadow: 1px 0 2px rgba(255, 255, 255, 0.02);
+}
+
+/* =======================
+   CARDS / PANELS / MODALS
+   ======================= */
+.card,
+.panel,
+.modal {
+  border: 1px solid var(--border-soft);
+  border-radius: 0.75rem;
+  background-color: var(--surface-1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.dark .card,
+.dark .panel,
+.dark .modal {
+  border: 1px solid var(--border-day);
+  background-color: var(--surface-1);
+  box-shadow: 0 1px 3px rgba(255, 255, 255, 0.03);
+}
+
+/* =======================
+   INPUTS / FORM ELEMENTS
+   ======================= */
+input,
+select,
+textarea {
+  border: 1px solid var(--border-soft);
+  border-radius: 0.375rem;
+  background-color: var(--surface-1);
+  color: var(--text-1);
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+  border: 1px solid var(--border-day);
+  background-color: var(--surface-1);
+  color: var(--text-1);
+}
+
+/* =======================
+   SCROLLBAR
+   ======================= */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 116, 139, 0.35);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(100, 116, 139, 0.5);
+}

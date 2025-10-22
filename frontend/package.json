@@ -1,0 +1,36 @@
+{
+  "name": "hotel-engineering-frontend",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@headlessui/react": "^2.2.8",
+    "@hello-pangea/dnd": "^18.0.1",
+    "axios": "^1.11.0",
+    "dayjs": "^1.11.18",
+    "framer-motion": "^12.23.12",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.2",
+    "lucide-react": "^0.542.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.1",
+    "react-select": "^5.10.2",
+    "react-tooltip": "^5.29.1",
+    "recharts": "^3.2.1",
+    "sonner": "^2.0.7",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.45",
+    "tailwindcss": "^3.4.10",
+    "vite": "^5.4.3"
+  }
+}
