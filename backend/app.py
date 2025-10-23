@@ -1,253 +1,121 @@
-# backend/app.py
 # -*- coding: utf-8 -*-
 import os
 import sys
 from importlib import import_module
-
-# ðŸŸ¢ Carga las variables del archivo .env (antes de importar Config)
-from dotenv import load_dotenv
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
-
 from flask import Flask, jsonify, request, make_response, send_from_directory
 from flask_cors import CORS
-CURRENT_DIR = os.path.dirname(__file__)
+from dotenv import load_dotenv
+
+# ==========================================================
+# í ½í PATH FIXER: Asegura que Python vea /hotel-engineering-app/
+# ==========================================================
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
+if CURRENT_DIR not in sys.path:
+    sys.path.insert(0, CURRENT_DIR)
 
+# ==========================================================
+# ´§í ½í Carga .env y Config / Extensions
+# ==========================================================
+load_dotenv(os.path.join(CURRENT_DIR, ".env"))
 try:
     from backend.config import Config
     from backend.extensions import db, migrate, jwt
 except ModuleNotFoundError:
-    from config import Config          # type: ignore
-    from extensions import db, migrate, jwt  # type: ignore
-
+    from config import Config
+    from extensions import db, migrate, jwt
 
 # ==========================================================
-# Dynamic import helpers
+# ´§í ½í Import din´§mico tolerante
 # ==========================================================
-def _try_import(candidates):
-    last_exc = None
-    for dotted in candidates:
+def safe_import(*candidates):
+    for name in candidates:
         try:
-            return import_module(dotted)
-        except ModuleNotFoundError as e:
-            last_exc = e
-            continue
-    if last_exc:
-        raise last_exc
-
-
-def _import_models():
-    model_modules = [
-        "asset",
-        "manual",
-        "inventory",
-        "invoice",
-        "project_room_status",
-        "project",
-        "quote",
-        "task",
-        "task_comment",
-        "user",
-        "vendor",
-        "document",
-        "inspection",
-        "sop",  # âœ… include SOP models
-    ]
-    for mod in model_modules:
-        candidates = [
-            f"backend.models.{mod}",
-            f"backend.{mod}",
-            f"models.{mod}",
-            f"{mod}",
-        ]
-        try:
-            _try_import(candidates)
-            print(f"[models] loaded: {mod}")
+            return import_module(name)
         except ModuleNotFoundError:
-            print(f"[models] skip: {mod}")
-
+            continue
+    return None
 
 # ==========================================================
-# Blueprint registration (con prefijo /api automÃ¡tico)
+# Ã¡í ½í Importa modelos
 # ==========================================================
-def _register_blueprints(app: Flask):
-    routes = [
-        ("auth", "bp"),
-        ("assets", "bp"),
-        ("inventory", "bp"),
-        ("invoices", "bp"),
-        ("projects", "bp"),
-        ("quotes", "bp"),
-        ("tasks", "bp"),
-        ("task_comments", "bp"),
-        ("vendors", "bp"),
-        ("users", "bp"),
-        ("uploads", "bp"),
-        ("documents", "bp"),
-        ("inspections", "bp"),
-        ("manuals", "bp"),
-        ("sops", "bp"),  # âœ… Added line to register SOP blueprint
+def import_models():
+    modules = [
+        "asset", "manual", "inventory", "invoice",
+        "project_room_status", "project", "quote", "task",
+        "task_comment", "user", "vendor", "document",
+        "inspection", "sop"
     ]
+    for m in modules:
+        mod = safe_import(f"backend.models.{m}", f"models.{m}")
+        print(f"[models] {'loaded' if mod else 'skip'}: {m}")
 
-    for module_name, attr in routes:
-        candidates = [
-            f"backend.routes.{module_name}",
-            f"backend.{module_name}",
-            f"routes.{module_name}",
-            f"{module_name}",
-        ]
-        try:
-            mod = _try_import(candidates)
-            bp = getattr(mod, attr)
+# ==========================================================
+# ´§í ½í Registra rutas din´§micamente
+# ==========================================================
+def register_routes(app):
+    routes = [
+        "auth", "assets", "inventory", "invoices", "projects", "quotes",
+        "tasks", "task_comments", "vendors", "users", "uploads",
+        "documents", "inspections", "manuals", "sops"
+    ]
+    for r in routes:
+        mod = safe_import(f"backend.routes.{r}", f"routes.{r}")
+        if not mod:
+            print(f"[routes] skip: {r}")
+            continue
+        bp = getattr(mod, "bp", None)
+        if not bp:
+            print(f"[routes] missing bp in {r}")
+            continue
+        if not bp.url_prefix or not bp.url_prefix.startswith("/api/"):
+            bp.url_prefix = f"/api{bp.url_prefix or ''}"
+        app.register_blueprint(bp)
+        print(f"[routes] registered: {r} Ã¡â†’ {bp.url_prefix}")
 
-            # ðŸ‘‡ Fuerza prefijo /api para TODOS los blueprints
-            prefix = bp.url_prefix or ""
-            if not prefix.startswith("/api/"):
-                bp.url_prefix = f"/api{prefix}"
-
-            app.register_blueprint(bp)
-            print(f"[routes] registered: {module_name} â†’ {bp.url_prefix}")
-
-        except ModuleNotFoundError as e:
-            print(f"[routes] not found: {module_name} ({e})")
-        except AttributeError as e:
-            print(f"[routes] missing '{attr}' in {module_name} ({e})")
-
-    # ðŸ‘‡ Explicit registration for INNCOM integration
-    try:
-        mod = _try_import([
-            "backend.routes.inncom",
-            "backend.inncom",
-            "routes.inncom",
-            "inncom",
-        ])
-        inncom_bp = getattr(mod, "inncom_bp")
-        if not inncom_bp.url_prefix.startswith("/api/"):
-            inncom_bp.url_prefix = f"/api{inncom_bp.url_prefix or ''}"
-        app.register_blueprint(inncom_bp)
+    # INNCOM opcional
+    mod = safe_import("backend.routes.inncom", "routes.inncom")
+    if mod and hasattr(mod, "inncom_bp"):
+        bp = getattr(mod, "inncom_bp")
+        if not bp.url_prefix.startswith("/api/"):
+            bp.url_prefix = f"/api{bp.url_prefix or ''}"
+        app.register_blueprint(bp)
         print("[routes] registered: inncom")
-    except ModuleNotFoundError as e:
-        print(f"[routes] not found: inncom ({e})")
-    except AttributeError as e:
-        print(f"[routes] missing 'inncom_bp' in inncom ({e})")
-
 
 # ==========================================================
-# Database setup
+# í ¾í App Factory
 # ==========================================================
-def _ensure_tables(app: Flask):
-    uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
-    with app.app_context():
-        try:
-            db.create_all()
-            print(f"[db] ensured all tables created at: {uri}")
-        except Exception as e:
-            print(f"[db] error creating tables: {e}")
-
-
-# ==========================================================
-# Flask app factory
-# ==========================================================
-def create_app(config_object: type["Config"] | None = None) -> Flask:
+def create_app(config_class=Config):
     app = Flask(__name__, instance_relative_config=True)
-
-    if config_object:
-        app.config.from_object(config_object)
-    else:
-        app.config.from_object(Config)
-
-    app.url_map.strict_slashes = False
-
-    # ðŸŸ¢ Unified uploads directory (project root)
-    PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
-    app.config.setdefault("UPLOADS_DIR", os.path.join(PROJECT_ROOT, "uploads"))
-    app.config.setdefault("UPLOAD_FOLDER", app.config["UPLOADS_DIR"])
-
-    app.config.setdefault("FRONTEND_ORIGIN", "http://localhost:5173")
-    app.config.setdefault("MAX_CONTENT_LENGTH", 20 * 1024 * 1024)
+    app.config.from_object(config_class)
 
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    import_models()
 
-    _import_models()
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-    allowed_origins = {"http://localhost:5173", "http://127.0.0.1:5173"}
-    CORS(
-        app,
-        resources={
-            r"/api/*": {
-                "origins": list(allowed_origins),
-                "supports_credentials": True,
-                "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-                "allow_headers": [
-                    "Authorization",
-                    "Content-Type",
-                    "X-User-Id",
-                    "X-Actor-Name",
-                ],
-                "expose_headers": ["Content-Type", "Content-Disposition"],
-                "max_age": 86400,
-            }
-        },
-    )
+    @app.route("/api/health")
+    def health():
+        return jsonify({"message": "Hotel Engineering API running", "status": "ok"})
 
-    # ======================================================
-    # Handle CORS preflight requests manually
-    # ======================================================
-    @app.route("/api/<path:any_path>", methods=["OPTIONS"])
-    def _cors_preflight(any_path: str):
-        origin = request.headers.get("Origin", "")
-        methods = request.headers.get(
-            "Access-Control-Request-Method", "GET,POST,PUT,PATCH,DELETE,OPTIONS"
-        )
-        hdrs = request.headers.get("Access-Control-Request-Headers", "") or ""
-        low = hdrs.lower()
-        needed = []
-        if "x-user-id" not in low:
-            needed.append("X-User-Id")
-        if "x-actor-name" not in low:
-            needed.append("X-Actor-Name")
-        if needed:
-            hdrs = (hdrs + ("," if hdrs else "") + ",".join(needed))
+    register_routes(app)
+    with app.app_context():
+        try:
+            db.create_all()
+        except Exception as e:
+            print(f"[db] Error creating tables: {e}")
 
-        resp = make_response("", 204)
-        if origin in allowed_origins:
-            h = resp.headers
-            h["Access-Control-Allow-Origin"] = origin
-            h["Vary"] = "Origin"
-            h["Access-Control-Allow-Credentials"] = "true"
-            h["Access-Control-Allow-Methods"] = methods
-            h["Access-Control-Allow-Headers"] = hdrs
-            h["Access-Control-Max-Age"] = "86400"
-        return resp
-
-    _register_blueprints(app)
-    _ensure_tables(app)
-
-    # ======================================================
-    # Test route
-    # ======================================================
-    @app.get("/api/test")
-    def api_test():
-        return jsonify({"msg": "API is working!"})
-
-    # ======================================================
-    # Serve uploaded files
-    # ======================================================
     @app.route("/uploads/<path:filename>")
-    def uploaded_files(filename: str):
-        uploads_dir = app.config.get("UPLOADS_DIR")
+    def serve_upload(filename):
+        uploads_dir = app.config.get("UPLOADS_DIR", os.path.join(PROJECT_ROOT, "uploads"))
         return send_from_directory(uploads_dir, filename)
 
     return app
 
-
-# ==========================================================
-# Run the app directly
-# ==========================================================
 if __name__ == "__main__":
-    app = create_app(Config)
+    app = create_app()
     app.run(host="0.0.0.0", port=5000)
